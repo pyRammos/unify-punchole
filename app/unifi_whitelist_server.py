@@ -142,7 +142,19 @@ def update_ip():
     if not device or token != SHARED_SECRET:
         return jsonify({'status': 'unauthorized'}), 401
 
-    ip = request.headers.get('X-Forwarded-For', request.remote_addr)
+ip = request.headers.get("CF-Connecting-IP") or request.remote_addr
+
+# Ensure it's a valid IPv4 address
+import ipaddress
+try:
+    ip_obj = ipaddress.ip_address(ip)
+    if ip_obj.version != 4:
+        print(f"🛑 Ignoring non-IPv4 address: {ip}")
+        return jsonify({"status": "ignored", "reason": "IPv6 not supported"}), 400
+except ValueError:
+    print(f"⚠️ Invalid IP address received: {ip}")
+    return jsonify({"status": "error", "reason": "Invalid IP"}), 400
+
 
     if is_new_ip(device, ip):
         print(f"🆕 New IP detected: {device} → {ip}")
