@@ -1,0 +1,5 @@
+*.db
+__pycache__/
+settings.cfg
+data/settings.cfg
+data/whitelisted_ips.db

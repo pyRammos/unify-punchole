@@ -1,0 +1,10 @@
+services:
+  unifi-sync:
+    build:
+      context: .
+    container_name: unifi-ip-sync
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./data:/app/data

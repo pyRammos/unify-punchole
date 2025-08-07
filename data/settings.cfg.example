@@ -1,0 +1,7 @@
+[unifi]
+controller_url = https://<unify_ip>
+username = <username>
+password = <password>
+site = default
+firewall_group_name = <preexisting network object in your unify device>
+shared_secret = <sectest_text>
