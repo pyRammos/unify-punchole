@@ -13,5 +13,4 @@ This Python + Flask app allows remote devices to register their public IP addres
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/your-username/unifi-ip-sync.git
-cd unifi-ip-sync
+git clone https://github.com/pyRammos/unify-punchole.git
