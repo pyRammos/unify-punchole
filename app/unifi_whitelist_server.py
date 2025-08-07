@@ -135,6 +135,8 @@ def sync_to_unifi():
 # === Flask Route ===
 @app.route('/update_ip', methods=['POST'])
 def update_ip():
+    import ipaddress
+
     data = request.get_json()
     device = data.get('device')
     token = data.get('token')
@@ -142,27 +144,27 @@ def update_ip():
     if not device or token != SHARED_SECRET:
         return jsonify({'status': 'unauthorized'}), 401
 
-ip = request.headers.get("CF-Connecting-IP") or request.remote_addr
+    # ✅ Use CF-Connecting-IP if available (Cloudflare), fallback to remote_addr
+    ip = request.headers.get("CF-Connecting-IP") or request.remote_addr
 
-# Ensure it's a valid IPv4 address
-import ipaddress
-try:
-    ip_obj = ipaddress.ip_address(ip)
-    if ip_obj.version != 4:
-        print(f"🛑 Ignoring non-IPv4 address: {ip}")
-        return jsonify({"status": "ignored", "reason": "IPv6 not supported"}), 400
-except ValueError:
-    print(f"⚠️ Invalid IP address received: {ip}")
-    return jsonify({"status": "error", "reason": "Invalid IP"}), 400
+    # ✅ Reject if IP is not IPv4
+    try:
+        ip_obj = ipaddress.ip_address(ip)
+        if ip_obj.version != 4:
+            print(f"🛑 Ignoring non-IPv4 address: {ip}")
+            return jsonify({"status": "ignored", "reason": "IPv6 not supported"}), 400
+    except ValueError:
+        print(f"⚠️ Invalid IP address received: {ip}")
+        return jsonify({"status": "error", "reason": "Invalid IP"}), 400
 
-
+    # ✅ If it's a new IP, store it and sync
     if is_new_ip(device, ip):
-        print(f"🆕 New IP detected: {device} → {ip}")
+        print(f"➕ New IP detected: {device} → {ip}")
         save_ip(device, ip)
         threading.Thread(target=sync_to_unifi, daemon=True).start()
         return jsonify({'status': 'synced', 'device': device, 'ip': ip})
     else:
-        print(f"🟰 IP already exists for {device}: {ip}")
+        print(f"🔁 IP already exists for {device}: {ip}")
         return jsonify({'status': 'unchanged', 'device': device, 'ip': ip})
 
 # === Background Cleanup + Sync ===
